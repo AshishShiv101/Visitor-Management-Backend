@@ -1,5 +1,7 @@
 Flask
 flask_sqlalchemy
+flask_restful
 psycopg2
+pyjwt
 python-dotenv
 sqlalchemy
