@@ -44,7 +44,17 @@ class meetingResource(Resource):
         return request_map[request_params['_action']](request_params = request_params)
 
     def patch(self):
-        return self.response_helper.response(code = status.HTTP_200_OK, message = f"Method not allowed", resp_code = 1001)
+        request_params = request.args.to_dict()
+
+        if self.validation_helper.verify_params_existence(request_params = request_params, params_to_verify = ['_action']).get('verification_res') == False:
+            return self.response_helper.response(code = status.HTTP_200_OK, message = f"Please provide an action to perform", resp_code = 1001)
+
+        request_map = self.resource_helper.initialize_resource_action_map(request_type = "patch")
+
+        if not self.resource_helper.validate_action(request_params = request_params, request_map = request_map):
+            return self.response_helper.response(code = status.HTTP_200_OK, message = f"Please provide a valid action to perform", resp_code = 1001)
+        
+        return request_map[request_params['_action']](request_params = request_params)
     
     def delete(self):
         return self.response_helper.response(code = status.HTTP_200_OK, message = f"Method not allowed", resp_code = 1001)

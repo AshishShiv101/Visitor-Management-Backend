@@ -7,6 +7,7 @@ from db.models.users_model import Users
 from db.models.visitors_model import Visitors
 from db.models.meetings_model import Meetings
 from db.models.meting_status_model import MeetingStatus
+from db.utils.db_enums import MeetingsStatusEnum
 
 class MeetingHelper:
 
@@ -19,13 +20,17 @@ class MeetingHelper:
 
         if request_type == "get":
             resource_action_map = {
-                "get_meetings" : self.get_meetings
+                "get_meetings" : self.get_meetings,
+                "get_specific_meeting" : self.get_specific_meeting
             }
         elif request_type == "post":
             resource_action_map = {
-                "schedule_meeting": self.schedule_meeting
+                "schedule_meeting": self.schedule_meeting,
             }
-
+        elif request_type == "patch":
+            resource_action_map = {
+                "update_meeting_status": self.update_meeting_status,
+            }
         return resource_action_map
     
     def validate_action(self, request_params : dict, request_map : dict):
@@ -121,4 +126,51 @@ class MeetingHelper:
         db.session.add(meeting_details)
         db.session.commit()
 
-        return self.response_helper.response(code = status.HTTP_200_OK, message = f"scheduling meeting", resp_code = 2000)
+        return self.response_helper.response(code = status.HTTP_200_OK, message = f"Meeting scheduled successfully", resp_code = 2000)
+    
+    def get_specific_meeting(self, request_params : dict):
+        
+        param_verification_res = self.validation_helper.verify_params_existence(request_params = request_params, params_to_verify = ['user_name', 'meeting_time'])
+        if param_verification_res.get('verification_res') == False:
+            return self.response_helper.response( code = status.HTTP_200_OK, message = f"Insufficient details, can't get meeting details", data = {"missing_params" : param_verification_res.get("missing_params")}, resp_code = 1001)
+        
+        existing_user_res = Users.query.filter_by(user_name = request_params.get("user_name")).first()
+
+        if not existing_user_res:
+            return self.response_helper.response( code = status.HTTP_200_OK, message = "User with this name does not exist", resp_code = 1001)
+
+        meeting_details = Meetings.query.filter(Meetings.user_id == existing_user_res.id, Meetings.meeting_time == request_params["meeting_time"]).first()
+        formatted_meetings_details = []
+
+        if meeting_details:
+            formatted_meetings_details = self.format_meetings_details(meetings_details = [meeting_details])
+        
+        return self.response_helper.response(code = status.HTTP_200_OK, message = f"Meeting retreived", data = formatted_meetings_details, resp_code = 2000)
+
+    def update_meeting_status(self, request_params : dict):
+
+        param_verification_res = self.validation_helper.verify_params_existence(request_params = request_params, params_to_verify = ['user_name', 'meeting_time', 'meeting_status'])
+        if param_verification_res.get('verification_res') == False:
+            return self.response_helper.response( code = status.HTTP_200_OK, message = f"Insufficient details, can't schedule meeting", data = {"missing_params" : param_verification_res.get("missing_params")}, resp_code = 1001)
+        
+        existing_user_res = Users.query.filter_by(user_name = request_params.get("user_name")).first()
+
+        if not existing_user_res:
+            return self.response_helper.response( code = status.HTTP_200_OK, message = "User with this name does not exist", resp_code = 1001)
+        
+        if request_params.get('meeting_status') not in MeetingsStatusEnum.__members__:
+            return self.response_helper.response(code = status.HTTP_200_OK, message = f"Provided meeting status does not exist!", resp_code = 1001)
+        
+        meeting_status_details = MeetingStatus.query.filter_by(meeting_status = request_params.get('meeting_status')).first()
+
+        if not meeting_status_details:
+            return self.response_helper.response(code = status.HTTP_200_OK, message = f'Provided meeting status exists in enum but not in db', resp_code = 1001)
+
+        meeting_details = Meetings.query.filter(Meetings.user_id == existing_user_res.id, Meetings.meeting_time == request_params["meeting_time"]).first()
+
+        if not meeting_details:
+            return self.response_helper.response(code = status.HTTP_200_OK, message = f"Provided meeting does not exist", resp_code = 1001)
+        
+        setattr(meeting_details, "meeting_status_id", meeting_status_details.id)
+        db.session.commit()
+        return self.response_helper.response(code = status.HTTP_200_OK, message = f"Meeting status updated successfully", resp_code = 2000)
