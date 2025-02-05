@@ -1,7 +1,9 @@
 Flask
 flask_sqlalchemy
 flask_restful
+marshmallow
 psycopg2
 pyjwt
 python-dotenv
 sqlalchemy
+werkzeug

@@ -2,8 +2,7 @@ import enum
 
 class RoleEnum(enum.Enum):
     ADMIN = "ADMIN"
-    USER = "USER"
-    GUEST = "GUEST"
+    SECURITY = "SECURITY"
 
 class MeetingsStatusEnum(enum.Enum):
     PENDING = "PENDING"
