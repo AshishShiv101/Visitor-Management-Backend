@@ -76,14 +76,22 @@ class AuthHelper:
         if existing_user:
             return self.response_helper.response( code = status.HTTP_200_OK, message = "User with this phno already exists", resp_code = 1001)
 
+        existing_user = Users.query.filter_by(user_name = request_params.get('user_name')).first()
+
+        if existing_user:
+            return self.response_helper.response( code = status.HTTP_200_OK, message = "User with this name already exists", resp_code = 1001)
+
         user_role = request_params.get('role')
 
         if user_role not in RoleEnum.__members__:
             return self.response_helper.response(code = status.HTTP_200_OK, message = f'Provided role does not exist!', resp_code = 1001)
         
-        
         user_name, phno, password = request_params.get('user_name'), request_params.get('phno'), request_params.get('password')
         role_res = Roles.query.filter_by(role = user_role).first()
+
+        if not role_res:
+            return self.response_helper.response(code = status.HTTP_200_OK, message = f'Provided role exists in enum but not in db', resp_code = 1001)
+
         user_role_id = role_res.id
 
         new_user = Users(user_name = user_name, phno = phno, password = generate_password_hash(password= password), role_id = user_role_id)
