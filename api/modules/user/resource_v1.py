@@ -20,7 +20,7 @@ class UserResource(Resource):
 
         request_params = request.args.to_dict()
 
-        if self.validation_helper.verify_params_existence(request_params = request_params, params_to_verify = ['_action']).get('verificaton_res') == False:
+        if self.validation_helper.verify_params_existence(request_params = request_params, params_to_verify = ['_action']).get('verification_res') == False:
             return self.response_helper.response(code = status.HTTP_200_OK, message = f"Please provide an action to perform", resp_code = 1001)
 
         request_map = self.resource_helper.initialize_resource_action_map(request_type = "get")
