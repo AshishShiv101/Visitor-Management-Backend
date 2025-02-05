@@ -47,7 +47,18 @@ class UserHelper:
         return formatted_user_details
 
     def get_user_details(self, request_params : dict):
-        user_details = Users.query.all() #need to update this with paginated requests!!
+
+        if request_params.get('role', None) is not None:
+
+            if request_params['role'] not in RoleEnum.__members__:
+                    return self.response_helper.response(code = status.HTTP_200_OK, message = f'Provided role does not exist!', resp_code = 1001)
+            
+            role_obj = Roles.query.filter_by(role = request_params['role']).first()
+            user_details = Users.query.filter_by(role_id=role_obj.id).all() #need to update this with paginated requests!!
+
+        else:
+            user_details = Users.query.all() #need to update this with paginated requests!!
+
         formatted_user_details = self.format_user_details(user_details = user_details)
         return self.response_helper.response(code = status.HTTP_200_OK, message = f"User details fetched", data = formatted_user_details, resp_code = 2000)
 
