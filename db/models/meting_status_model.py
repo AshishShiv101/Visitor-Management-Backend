@@ -3,7 +3,7 @@ from sqlalchemy import UUID, Column, Enum
 from db.utils.db_enums import MeetingsStatusEnum
 from db.base import ModelBase
 
-class Roles(ModelBase):
+class MeetingStatus(ModelBase):
     
     __tablename__ = "meeting_status"
     
@@ -12,7 +12,7 @@ class Roles(ModelBase):
     
     def __repr__(self):
         return (
-            f"** roles ** "
+            f"** meeting status ** "
             f"id : {self.id} "
             f"meeting_status : {self.meeting_status.value} "
             f"created_at : {self.created_at} "
