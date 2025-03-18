@@ -18,4 +18,4 @@ class Settings:
         raise ValueError("DATABASE_URL environment variable is required")
     if not SECRET_KEY:
         raise ValueError("JWT_SECRET_KEY environment variable is required")
-    print("lol")
+  
